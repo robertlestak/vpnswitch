@@ -1,4 +1,4 @@
-package main
+package vpnswitch
 
 import (
 	"bytes"
@@ -97,18 +97,4 @@ func Switch() {
 	Stop()
 	time.Sleep(time.Second * 5)
 	Start()
-}
-
-func main() {
-	if len(os.Args) < 2 {
-		return
-	}
-	switch os.Args[1] {
-	case "start":
-		Start()
-	case "stop":
-		Stop()
-	case "switch":
-		Switch()
-	}
 }
