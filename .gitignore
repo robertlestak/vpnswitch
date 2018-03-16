@@ -1,0 +1,6 @@
+vpnswitch
+.env
+.netrc
+*.swp
+data
+.DS_Store
