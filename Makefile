@@ -1,4 +1,5 @@
-build: .netrc
+build: 
+	vgo build -o vpn
 
 .netrc:
 	rm -f .netrc
