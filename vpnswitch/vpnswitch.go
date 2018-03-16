@@ -75,7 +75,7 @@ func getLocation() (string, error) {
 }
 
 func Stop() {
-	params := []string{"killall", "openvpn"}
+	params := []string{"killall", "-9", "openvpn"}
 	cmd := exec.Command("sudo", params...)
 	err := cmd.Run()
 	if err != nil {
