@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/adal-io/vpnswitch/vpnswitch"
 	"os"
 )
@@ -10,12 +11,16 @@ func main() {
 		vpnswitch.Start()
 		return
 	}
+	var e error
 	switch os.Args[1] {
 	case "start":
-		vpnswitch.Start()
+		e = vpnswitch.Start()
 	case "switch":
-		vpnswitch.Switch()
+		e = vpnswitch.Switch()
 	case "stop":
-		vpnswitch.Stop()
+		e = vpnswitch.Stop()
+	}
+	if e != nil {
+		fmt.Println(e)
 	}
 }

@@ -2,6 +2,7 @@ package vpnswitch
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	_ "github.com/joho/godotenv/autoload"
 	"io/ioutil"
@@ -25,7 +26,8 @@ func GetDataPath() string {
 	return p
 }
 
-func Connect(l string) {
+func Connect(l string) error {
+	var e error
 	fmt.Printf("Connecting to location %s\n", strings.Replace(l, ".ovpn", "", -1))
 	params := []string{"openvpn",
 		"--config",
@@ -43,15 +45,16 @@ func Connect(l string) {
 	cmd.Stdout = &output
 	cmd.Stderr = &outputErr
 	err := cmd.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 	if strings.Contains(output.String(), "AUTH_FAILED") {
-		fmt.Println("Authorization failed")
-		os.Exit(1)
+		e = errors.New("AUTH_FAILED")
 	}
-	fmt.Println("Successfully connected")
+	if outputErr.String() != "" {
+		e = errors.New(outputErr.String())
+	}
+	if err != nil {
+		e = err
+	}
+	return e
 }
 
 func getLocation() (string, error) {
@@ -59,7 +62,6 @@ func getLocation() (string, error) {
 	var e error
 	ls, err := ioutil.ReadDir(GetDataPath())
 	if err != nil {
-		fmt.Println(err)
 		return l, err
 	}
 	var fs []string
@@ -74,27 +76,40 @@ func getLocation() (string, error) {
 	return l, e
 }
 
-func Stop() {
+func Stop() error {
+	var e error
 	params := []string{"killall", "-9", "openvpn"}
 	cmd := exec.Command("sudo", params...)
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
-	fmt.Println("Connection closed")
+	return e
 }
 
-func Start() {
+func Start() error {
+	var e error
 	l, err := getLocation()
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
-	Connect(l)
+	cerr := Connect(l)
+	if cerr != nil {
+		return cerr
+	}
+	return e
 }
 
-func Switch() {
-	Stop()
+func Switch() error {
+	var e error
+	err := Stop()
+	if err != nil {
+		return err
+	}
 	time.Sleep(time.Second * 5)
-	Start()
+	serr := Start()
+	if serr != nil {
+		return serr
+	}
+	return e
 }
