@@ -20,7 +20,7 @@ func GetDataPath() string {
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 	p := path.Join(cwd, "data", "openvpn")
 	return p

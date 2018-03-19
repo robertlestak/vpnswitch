@@ -21,6 +21,6 @@ func main() {
 		e = vpnswitch.Stop()
 	}
 	if e != nil {
-		fmt.Println(e)
+		fmt.Fprintln(os.Stderr, e)
 	}
 }
