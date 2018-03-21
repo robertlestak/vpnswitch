@@ -87,8 +87,22 @@ func Stop() error {
 	return e
 }
 
+func CreateAuth() error {
+	var e error
+	d := []byte(os.Getenv("OPENVPN_USERNAME") + "\n" + os.Getenv("OPENVPN_PASSWORD"))
+	p := path.Join(GetDataPath(), "auth.txt")
+	err := ioutil.WriteFile(p, d, 0644)
+	if err != nil {
+		return err
+	}
+	return e
+}
+
 func Start() error {
 	var e error
+	if aerr := CreateAuth(); aerr != nil {
+		return aerr
+	}
 	l, err := getLocation()
 	if err != nil {
 		return err
