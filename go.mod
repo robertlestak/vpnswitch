@@ -1,3 +1,3 @@
-module "github.com/adal-io/vpnswitch"
+module github.com/robertlestak/vpnswitch
 
-require "github.com/joho/godotenv" v1.2.0
+require github.com/joho/godotenv v1.2.0

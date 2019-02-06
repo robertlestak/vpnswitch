@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	_ "github.com/joho/godotenv/autoload"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -12,9 +11,11 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
-func GetDataPath() string {
+func dataPath() string {
 	if os.Getenv("VPN_DATA_DIR") != "" {
 		return os.Getenv("VPN_DATA_DIR")
 	}
@@ -26,18 +27,19 @@ func GetDataPath() string {
 	return p
 }
 
+// Connect connects to VPN server with configuration file l
 func Connect(l string) error {
 	var e error
 	fmt.Printf("Connecting to location %s\n", strings.Replace(l, ".ovpn", "", -1))
 	params := []string{"openvpn",
 		"--config",
-		path.Join(GetDataPath(), l),
+		path.Join(dataPath(), l),
 		"--ca",
-		path.Join(GetDataPath(), "ca.rsa.2048.crt"),
+		path.Join(dataPath(), "ca.rsa.2048.crt"),
 		"--crl-verify",
-		path.Join(GetDataPath(), "crl.rsa.2048.pem"),
+		path.Join(dataPath(), "crl.rsa.2048.pem"),
 		"--auth-user-pass",
-		path.Join(GetDataPath(), "auth.txt"),
+		path.Join(dataPath(), "auth.txt"),
 	}
 	cmd := exec.Command("sudo", params...)
 	var output bytes.Buffer
@@ -60,7 +62,7 @@ func Connect(l string) error {
 func getLocation() (string, error) {
 	var l string
 	var e error
-	ls, err := ioutil.ReadDir(GetDataPath())
+	ls, err := ioutil.ReadDir(dataPath())
 	if err != nil {
 		return l, err
 	}
@@ -76,10 +78,11 @@ func getLocation() (string, error) {
 	return l, e
 }
 
+// Stop stops all openvpn processes
 func Stop() error {
 	var e error
-	params := []string{"openvpn"}
-	cmd := exec.Command("pkill", params...)
+	params := []string{"pkill", "openvpn"}
+	cmd := exec.Command("sudo", params...)
 	err := cmd.Run()
 	if err != nil {
 		return err
@@ -87,10 +90,11 @@ func Stop() error {
 	return e
 }
 
+// CreateAuth creates openvpn authorization file
 func CreateAuth() error {
 	var e error
 	d := []byte(os.Getenv("OPENVPN_USERNAME") + "\n" + os.Getenv("OPENVPN_PASSWORD"))
-	p := path.Join(GetDataPath(), "auth.txt")
+	p := path.Join(dataPath(), "auth.txt")
 	err := ioutil.WriteFile(p, d, 0644)
 	if err != nil {
 		return err
@@ -98,6 +102,7 @@ func CreateAuth() error {
 	return e
 }
 
+// Start starts openvpn connection
 func Start() error {
 	var e error
 	if aerr := CreateAuth(); aerr != nil {
@@ -106,6 +111,9 @@ func Start() error {
 	l, err := getLocation()
 	if err != nil {
 		return err
+	}
+	if l == "" {
+		return errors.New("Configuration file not found")
 	}
 	cerr := Connect(l)
 	if cerr != nil {

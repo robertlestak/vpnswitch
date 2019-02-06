@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/adal-io/vpnswitch/vpnswitch"
 	"os"
+
+	"github.com/robertlestak/vpnswitch/vpnswitch"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		vpnswitch.Start()
+		vpnswitch.Switch()
 		return
 	}
 	var e error

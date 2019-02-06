@@ -1,24 +1,18 @@
-FROM golang:1.10 as builder
+FROM golang:1.11 as builder
 
-RUN mkdir -p /go/src/github.com/adal-io/vpnswitcher
-WORKDIR /go/src/github.com/adal-io/vpnswitcher
+WORKDIR /src
 
 COPY . .
 COPY .netrc /root
 
-RUN go get -u golang.org/x/vgo 
+RUN go build -o vpn
 
-RUN CC=gcc vgo build -o vpnswitcher
+FROM golang:1.11 as app
 
-FROM golang:1.10 as app
-
-RUN mkdir -p /go/src/github.com/adal-io/vpnswitcher
-WORKDIR /go/src/github.com/adal-io/vpnswitcher
+WORKDIR /src
 
 RUN apt-get update && apt-get install -y openvpn sudo
 
-COPY --from=builder /go/src/github.com/adal-io/vpnswitcher/vpnswitcher .
+COPY --from=builder /src/vpn .
 
-# ENTRYPOINT ["./vpnswitcher"]
-
-
+# ENTRYPOINT ["./vpn"]

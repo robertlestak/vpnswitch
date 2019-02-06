@@ -1,5 +1,8 @@
-build: 
-	vgo build -o vpn
+build: .netrc
+	go build -o vpn
+
+docker: .netrc
+	docker build . -t vpn
 
 .netrc:
 	rm -f .netrc
@@ -9,5 +12,3 @@ clean:
 	rm -f .netrc
 
 .PHONY: clean build
-
-
