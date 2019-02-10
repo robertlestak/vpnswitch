@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -134,4 +135,17 @@ func Switch() error {
 		return serr
 	}
 	return e
+}
+
+func CheckIP() (string, error) {
+	res, err := http.Get("https://checkip.amazonaws.com")
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	bd, rerr := ioutil.ReadAll(res.Body)
+	if rerr != nil {
+		return "", rerr
+	}
+	return strings.TrimSpace(string(bd)), nil
 }
