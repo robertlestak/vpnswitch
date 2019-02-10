@@ -18,22 +18,42 @@ func checkIP(c chan string) {
 	c <- ip
 }
 
-func run() {
-	for {
-		c := make(chan string, 1)
-		go checkIP(c)
-		select {
-		case ip := <-c:
-			fmt.Println("IP:", ip)
-		case <-time.After(time.Second * 5):
-			fmt.Println("Timeout Getting IP")
-		}
-		time.Sleep(time.Second * 10)
+func checkIPWithTimeout() string {
+	c := make(chan string, 1)
+	go checkIP(c)
+	select {
+	case ip := <-c:
+		return "IP: " + ip
+	case <-time.After(time.Second * 5):
+		return "Timeout Getting IP"
 	}
 }
 
+func run(rc chan error) {
+	i := 0
+	for {
+		nip := checkIPWithTimeout()
+		fmt.Println(nip)
+		if i >= 3 && origIP == nip {
+			i = 0
+			fmt.Println("Reconnecting...")
+			e := vpnswitch.Switch()
+			if e != nil {
+				rc <- e
+			}
+		}
+		time.Sleep(time.Second * 30)
+		i++
+	}
+}
+
+var origIP string
+
 func main() {
 	var e error
+	if len(os.Args) <= 1 {
+		os.Args = append(os.Args, "run")
+	}
 	switch os.Args[1] {
 	case "start":
 		e = vpnswitch.Start()
@@ -42,8 +62,11 @@ func main() {
 	case "stop":
 		e = vpnswitch.Stop()
 	case "run":
+		origIP = checkIPWithTimeout()
 		e = vpnswitch.Start()
-		run()
+		rc := make(chan error, 1)
+		go run(rc)
+		fmt.Println(<-rc)
 	}
 	if e != nil {
 		fmt.Fprintln(os.Stderr, e)

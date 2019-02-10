@@ -67,6 +67,9 @@ func getLocation() (string, error) {
 	if err != nil {
 		return l, err
 	}
+	if len(ls) == 0 {
+		return "", errors.New("No configuration files found in " + dataPath())
+	}
 	var fs []string
 	for _, f := range ls {
 		if !strings.Contains(f.Name(), ".ovpn") {
@@ -84,9 +87,11 @@ func Stop() error {
 	var e error
 	params := []string{"pkill", "openvpn"}
 	cmd := exec.Command("sudo", params...)
+	var outerr bytes.Buffer
+	cmd.Stderr = &outerr
 	err := cmd.Run()
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("%s: %s", err.Error(), outerr.String()))
 	}
 	return e
 }
